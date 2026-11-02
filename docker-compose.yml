@@ -1,0 +1,22 @@
+# One command to start the whole system:  docker compose up --build
+# Then open http://localhost:8000
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      SANDBOX_BACKEND: process   # set to "docker" to run each session in its own container (see docs)
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+  # Builds the sandbox image used when SANDBOX_BACKEND=docker. It does not run as a service.
+  sandbox-image:
+    build: ./backend/sandbox
+    image: data-agent-sandbox:latest
+    profiles: ["build-only"]
+
+volumes:
+  uploads:

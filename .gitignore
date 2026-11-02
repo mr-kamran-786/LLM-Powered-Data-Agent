@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python
+zonix/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Runtime data
+uploads/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+# Tooling caches and local editor config
+.ruff_cache/
+.claude/
+
+# Generated report preview (the PDF is committed)
+docs/report/report.html

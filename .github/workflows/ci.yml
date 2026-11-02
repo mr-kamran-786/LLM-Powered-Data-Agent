@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt ruff
+      - name: Lint
+        run: ruff check backend eval tests --select E,F,W --ignore E501
+      - name: Generate benchmark datasets
+        run: python -m eval.make_datasets
+      - name: Tests (LLM is mocked; no API key needed)
+        run: pytest -q

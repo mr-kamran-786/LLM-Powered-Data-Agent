@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Agent</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233b6fe0'/><path d='M8 22V14M14 22V9M20 22v-6M26 22V12' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/vendor/plotly.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M8 22V14M14 22V9M20 22v-6M26 22V12"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Data Agent</div>
+        <div class="brand-sub">LLM-powered analysis</div>
+      </div>
+    </div>
+
+    <button class="btn primary block" id="newSession">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> New analysis
+    </button>
+
+    <section class="side-section">
+      <div class="side-title">Data <span class="muted" id="datasetCount"></span></div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" multiple accept=".csv,.tsv,.txt,.xlsx,.xls,.parquet,.json,.jsonl" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <span><strong>Upload files</strong><br><small>CSV, Excel, Parquet, JSON · up to <span id="maxMb">500</span> MB</small></span>
+      </label>
+      <div class="upload-progress" id="uploadProgress" hidden></div>
+      <ul class="dataset-list" id="datasetList"></ul>
+      <details class="connect">
+        <summary>Connect a database</summary>
+        <form id="connectForm">
+          <select id="dbKind" aria-label="Database type">
+            <option value="sqlite">SQLite file</option>
+            <option value="duckdb">DuckDB file</option>
+            <option value="postgres">PostgreSQL</option>
+          </select>
+          <input id="dbTarget" placeholder="path/to/file.sqlite" aria-label="Database path or DSN" required>
+          <input id="dbName" placeholder="name (optional)" aria-label="Connection name">
+          <button class="btn small" type="submit">Connect (read-only)</button>
+        </form>
+      </details>
+      <button class="btn ghost small block" id="loadSamples">Load demo datasets</button>
+    </section>
+
+    <section class="side-section grow">
+      <div class="side-title">History</div>
+      <ul class="session-list" id="sessionList"></ul>
+    </section>
+
+    <div class="side-foot">University West · Project Group 23</div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn mobile-only" id="menuBtn" aria-label="Open menu">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <h1 id="sessionTitle">New analysis</h1>
+      <div class="top-controls">
+        <label class="select-wrap" title="LLM used for the next question">
+          <span class="sr-only">Model</span>
+          <select id="modelSelect"></select>
+        </label>
+        <label class="toggle" title="A second LLM pass checks every answer before it is shown (multi-agent mode)">
+          <input type="checkbox" id="criticToggle" checked>
+          <span class="track"></span><span>Critic</span>
+        </label>
+        <div class="menu">
+          <button class="btn small" id="exportBtn" aria-haspopup="true">
+            <svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg> Export
+          </button>
+          <div class="menu-pop" id="exportMenu" hidden>
+            <button data-fmt="html">HTML report</button>
+            <button data-fmt="pdf">PDF report</button>
+            <button data-fmt="md">Markdown</button>
+            <button data-fmt="ipynb">Jupyter notebook</button>
+          </div>
+        </div>
+        <div class="usage" id="usage" title="Tokens used in this session"></div>
+      </div>
+    </header>
+
+    <div class="thread" id="thread">
+      <div class="empty" id="emptyState">
+        <h2>Ask your data a question</h2>
+        <p>Upload a file or connect a database, then ask in plain language. The agent plans the analysis,
+          writes and runs the code in a sandbox, checks the result, and shows you every step.</p>
+        <div class="howto">
+          <div><span>1</span>Load data</div>
+          <div><span>2</span>Ask a question</div>
+          <div><span>3</span>Inspect code, tables &amp; charts</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="composer">
+      <div class="suggestions" id="suggestions"></div>
+      <form id="askForm" class="ask">
+        <textarea id="question" rows="1" placeholder="e.g. Which region grew fastest in 2025?" aria-label="Your question"></textarea>
+        <button class="btn primary" id="sendBtn" type="submit" aria-label="Send">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </form>
+      <div class="hint">Enter to send · Shift+Enter for a new line · numbers come only from executed code</div>
+    </footer>
+  </main>
+
+  <!-- ============ Data drawer ============ -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <div class="eyebrow">Dataset profile</div>
+        <h2 id="drawerTitle"></h2>
+      </div>
+      <button class="icon-btn" id="drawerClose" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="columns">Columns</button>
+      <button class="tab" data-tab="cleaning">Cleaning <span class="badge" id="cleanCount"></span></button>
+      <button class="tab" data-tab="preview">Preview</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

@@ -1,0 +1,1239 @@
+{
+ "summary": {
+  "run_id": "20261102-214924",
+  "model": "gemini/gemini-3.5-flash-lite",
+  "critic": true,
+  "tag": "compare30",
+  "fallbacks": false,
+  "models_used": [
+   "gemini/gemini-3.5-flash-lite"
+  ],
+  "prompt_versions": {
+   "coder_system": "1.3",
+   "critic": "1.0",
+   "few_shot": "1.1",
+   "planner": "1.2",
+   "responder": "1.1",
+   "summarizer": "1.0"
+  },
+  "date": "2026-11-02T22:00:44",
+  "n_questions": 29,
+  "answer_accuracy_pct": 100.0,
+  "execution_success_pct": 100.0,
+  "safety_pass": "1/1",
+  "provider_errors": 0,
+  "accuracy_excl_provider_errors_pct": 100.0,
+  "avg_code_steps": 1.45,
+  "avg_failed_steps_retried": 0.03,
+  "latency_median_s": 53.95,
+  "latency_p95_s": 57.75,
+  "avg_llm_calls": 5.59,
+  "avg_tokens": 12401,
+  "total_cost_usd": 0.1411,
+  "cost_per_question_usd": 0.00487,
+  "by_category": {
+   "aggregation": {
+    "n": 5,
+    "accuracy_pct": 100.0
+   },
+   "cleaning": {
+    "n": 1,
+    "accuracy_pct": 100.0
+   },
+   "filtering": {
+    "n": 8,
+    "accuracy_pct": 100.0
+   },
+   "join": {
+    "n": 2,
+    "accuracy_pct": 100.0
+   },
+   "ml": {
+    "n": 2,
+    "accuracy_pct": 100.0
+   },
+   "statistics": {
+    "n": 2,
+    "accuracy_pct": 100.0
+   },
+   "time_series": {
+    "n": 4,
+    "accuracy_pct": 100.0
+   },
+   "visualization": {
+    "n": 5,
+    "accuracy_pct": 100.0
+   }
+  },
+  "by_difficulty": {
+   "easy": {
+    "n": 14,
+    "accuracy_pct": 100.0
+   },
+   "hard": {
+    "n": 3,
+    "accuracy_pct": 100.0
+   },
+   "medium": {
+    "n": 12,
+    "accuracy_pct": 100.0
+   }
+  },
+  "failures": []
+ },
+ "results": [
+  {
+   "id": "D05",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "Electronics",
+   "answer_md": "**Electronics**\n\nThe Electronics product category generated the highest sales value for delivered or shipped orders, reaching a total of 2,266,797.21. Sports followed in second place with 1,164,907.40 in sales, while Furniture recorded 718,023.82. Clothing and Books generated lower sales totals of 194,071.92 and 111,358.14, respectively.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 6,
+    "input_tokens": 15560,
+    "output_tokens": 692,
+    "cost_usd": 0.006398,
+    "latency_s": 54.3,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.32,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "\nSELECT \n    p.category, \n    SUM(oi.quantity * oi.unit_price) AS total_sales\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nJOIN products p ON oi.product_id = p.product_id\nWHERE o.status IN ('delivered', 'shipped')\nGROUP BY p.category\nORDER BY total_sales DESC\n",
+    "print(sales_by_category)\ntop_cat = sales_by_category.iloc[0]['category']\ntop_sales = sales_by_category.iloc[0]['total_sales']\nprint(f\"Top category: {top_cat} with sales {top_sales:,.2f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "D09",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "Jacket Basic",
+   "answer_md": "**Jacket Basic**\n\n* Jacket Basic was ordered in the largest total quantity, reaching a total of 283 units.\n* Bookshelf Pro followed closely in second place with 275 units, while Dumbbells Pro ranked third with 272 units. \n* Rounding out the top products were Novel Basic with 267 units and Sneakers Pro with 264 units.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 6,
+    "input_tokens": 14988,
+    "output_tokens": 508,
+    "cost_usd": 0.005766,
+    "latency_s": 59.5,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 59.51,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "\nSELECT p.name AS product_name, SUM(oi.quantity) AS total_quantity\nFROM order_items oi\nJOIN products p ON oi.product_id = p.product_id\nGROUP BY p.name\nORDER BY total_quantity DESC\nLIMIT 5\n",
+    "\nprint(top_products)\ntop_row = top_products.iloc[0]\nprint(f\"Top product: {top_row['product_name']} with quantity {top_row['total_quantity']}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "D13",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "1275",
+   "answer_md": "**1,275**\n\n* A total of 1,275 orders were placed in the year 2025.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 7,
+    "input_tokens": 18217,
+    "output_tokens": 409,
+    "cost_usd": 0.006488,
+    "latency_s": 53.39,
+    "steps": 3,
+    "failed_steps": 1,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 53.41,
+   "steps": 3,
+   "failed_steps": 1,
+   "executed_ok": true,
+   "blocked": [
+    "CatalogException"
+   ],
+   "code": [
+    "SELECT COUNT(*) AS order_count FROM orders WHERE strftime('%Y', order_date) = '2025'",
+    "print(orders_2025)\n# Also check total orders to be sure\ntot = sql(\"SELECT COUNT(*) FROM orders\").iloc[0,0]\nprint(f\"Total orders: {tot}\")\n",
+    "print(orders_2025)\nprint(orders_2025.iloc[0, 0])\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "D17",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "2025-05",
+   "answer_md": "**2025-05**\n\nIn 2025, May (2025-05) recorded the highest sales value at 227,703.30 (excluding cancelled orders). August followed closely as the second-highest month with 225,374 sales, while June recorded the lowest sales value for the year at 163,301.21. For a complete visualization of the monthly trends throughout the year, see the chart below.\n\nNote: Cancelled orders were excluded from the sales calculations.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 6,
+    "input_tokens": 16379,
+    "output_tokens": 814,
+    "cost_usd": 0.006949,
+    "latency_s": 57.73,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 57.75,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "\nSELECT \n    strftime('%Y-%m', o.order_date) AS month,\n    SUM(oi.quantity * oi.unit_price) AS total_sales\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE strftime('%Y', o.order_date) = '2025'\n  AND o.status != 'cancelled'\nGROUP BY month\nORDER BY total_sales DESC\n",
+    "\nimport plotly.express as px\n\ndf = monthly_sales_2025.sort_values(\"month\")\nfig = px.bar(df, x=\"month\", y=\"total_sales\", \n             title=\"Monthly Sales in 2025\",\n             labels={\"month\": \"Month\", \"total_sales\": \"Total Sales\"})\nshow_chart(fig, \"Monthly Sales in 2025\")\n\ntop_month = monthly_sales_2025.iloc[0][\"month\"]\ntop_sales = monthly_sales_2025.iloc[0][\"total_sales\"]\nprint(f\"Top month: {top_month} with sales {top_sales:,.2f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "D18",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "see chart",
+   "answer_md": "**Here is the bar chart showing the number of orders by status, with the visualization displayed below.**\n\n* Delivered orders total 1,999.\n* Shipped orders total 211.\n* Cancelled orders total 172.\n* Returned orders total 118.\n\nSee the chart below for the complete visual breakdown.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 6,
+    "input_tokens": 14861,
+    "output_tokens": 457,
+    "cost_usd": 0.005601,
+    "latency_s": 53.88,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 53.9,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "SELECT status, COUNT(*) AS order_count FROM orders GROUP BY status ORDER BY order_count DESC",
+    "fig = px.bar(\n    orders_by_status,\n    x=\"status\",\n    y=\"order_count\",\n    title=\"Number of Orders by Status\",\n    labels={\"status\": \"Order Status\", \"order_count\": \"Number of Orders\"},\n    text=\"order_count\"\n)\nshow_chart(fig, \"Number of Orders by Status\")\norders_by_status\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E05",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "Gothenburg",
+   "answer_md": "**Gothenburg**\n\n* Gothenburg has the most employees with a total of 112.\n* Trollh\u00e4ttan is a close second with 111 employees, followed by Stockholm with 84.\n* Remote locations account for 64 employees, while Malm\u00f6 has the fewest with 29.\n\nFor more details, see the chart below.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8815,
+    "output_tokens": 438,
+    "cost_usd": 0.003739,
+    "latency_s": 4.64,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 4.68,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "df_city = employees.groupby(\"city\", as_index=False)[\"employee_id\"].count().rename(columns={\"employee_id\": \"count\"}).sort_values(\"count\", ascending=False)\nprint(df_city)\nfig = px.bar(df_city, x=\"city\", y=\"count\", title=\"Number of Employees by City\", labels={\"city\": \"City\", \"count\": \"Employee Count\"})\nshow_chart(fig, \"Number of Employees by City\")\ndf_city\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E09",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "192",
+   "answer_md": "**192**\n\n* A total of 192 employees were hired in 2020 or later.\n* This group represents 48.0% of the entire workforce, out of 400 total employees.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 7,
+    "input_tokens": 14851,
+    "output_tokens": 536,
+    "cost_usd": 0.005795,
+    "latency_s": 56.01,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 56.02,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "n_hired_2020_plus = (employees['hire_date'] >= '2020-01-01').sum()\nprint(\"Number of employees hired in 2020 or later:\", n_hired_2020_plus)\nn_hired_2020_plus\n",
+    "total_emp = len(employees)\npct = (n_hired_2020_plus / total_emp) * 100\nprint(f\"Total employees: {total_emp}\")\nprint(f\"Hired 2020+: {n_hired_2020_plus}\")\nprint(f\"Percentage: {pct:.1f}%\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E11",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "28.0",
+   "answer_md": "**28.0%**\n\n* Out of a total of 400 employees, 112 work remotely.\n* This brings the overall percentage of remote workers to 28.0%.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8258,
+    "output_tokens": 300,
+    "cost_usd": 0.003227,
+    "latency_s": 56.12,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 56.15,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "pct_remote = (employees['remote'].mean()) * 100\nprint(f\"Percentage of remote employees: {pct_remote:.1f}%\")\nprint(f\"Count remote: {employees['remote'].sum()}, Total: {len(employees)}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E13",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "0.695",
+   "answer_md": "**0.695**\n\n* The Pearson correlation coefficient between `job_level` and `monthly_salary_sek` is 0.695.\n* This indicates a strong positive linear relationship between an employee's job level and their monthly salary in SEK.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8250,
+    "output_tokens": 327,
+    "cost_usd": 0.003293,
+    "latency_s": 53.32,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 53.33,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "corr = employees['job_level'].corr(employees['monthly_salary_sek'])\nprint(f\"Correlation: {corr:.3f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E14",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "185",
+   "answer_md": "**185**\n\n* When employees are grouped into 3 clusters based on years of experience and monthly salary (standardized with a random state of 0), the largest cluster contains 185 employees (Cluster 1).\n* The remaining employees are distributed across the other two groups, with 145 employees in Cluster 2 and 70 employees in Cluster 0.\n\nNote: StandardScaler was used prior to KMeans clustering with random_state=0.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8780,
+    "output_tokens": 548,
+    "cost_usd": 0.004004,
+    "latency_s": 10.09,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 10.11,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "from sklearn.preprocessing import StandardScaler\nfrom sklearn.cluster import KMeans\nimport pandas as pd\n\nX = employees[['years_experience', 'monthly_salary_sek']].copy()\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\nkmeans = KMeans(n_clusters=3, random_state=0)\nemployees['cluster'] = kmeans.fit_predict(X_scaled)\n\ncluster_counts = employees['cluster'].value_counts()\nprint(cluster_counts)\nlargest_cluster_size = cluster_counts.max()\nprint(\"Largest cluster size:\", largest_cluster_size)\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "E15",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "16",
+   "answer_md": "**16 employees**\n\n* There are 16 employees who have a performance score below 3 and left the company.\n* This is out of a total of 400 employees in the dataset.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 7,
+    "input_tokens": 14385,
+    "output_tokens": 413,
+    "cost_usd": 0.005348,
+    "latency_s": 54.45,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.47,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "count_filtered = len(employees[(employees[\"performance_score\"] < 3) & (employees[\"left_company\"] == True)])\nprint(count_filtered)\ncount_filtered\n",
+    "print(f\"Count: {count_filtered}\")\ntotal_emp = len(employees)\nprint(f\"Total employees: {total_emp}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S05",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "916",
+   "answer_md": "**910 unique orders (916 total order line records)**\n\n* There were 916 total order line records placed through the Online channel in 2024.\n* These records correspond to 910 unique order IDs.\n* Note: A small number of orders contained multiple line items, resulting in 6 duplicate order IDs within the dataset.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 8,
+    "input_tokens": 23203,
+    "output_tokens": 862,
+    "cost_usd": 0.009116,
+    "latency_s": 57.11,
+    "steps": 4,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 57.14,
+   "steps": 4,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "online_2024_orders = sales[(sales['channel'] == 'Online') & (sales['order_date'].dt.year == 2024)]\nprint(\"Total rows:\", len(online_2024_orders))\nprint(\"Unique order_ids:\", online_2024_orders['order_id'].nunique())\nonline_2024_orders.head()\n",
+    "# Double check order_ids vs rows\nprint(\"Duplicate order_ids count:\", online_2024_orders['order_id'].duplicated().sum())\n# Let's see if orders are unique or if order_id can appear multiple times\nprint(\"Value counts of order_id frequencies:\")\nprint(online_2024_orders['order_id'].value_counts().head())\n",
+    "# Usually \"How many orders\" in sales order tables refers to either order records (rows) or unique orders. Let's provide both or clarify.\n# Let's inspect the entire sales table to see if order_id is unique across the whole table.\nprint(\"Total rows in sales:\", len(sales))\nprint(\"Unique order_ids in sales:\", sales['order_id'].nunique())\n",
+    "# In the entire sales table, there are 5040 rows and 5000 unique order_ids. That means an order_id can appear more than once (e.g. multiple items per order).\n# Let's check how many unique order_ids versus total rows there are for Online channel in 2024.\ntotal_rows = len(online_2024_orders)\nunique_orders = online_2024_orders['order_id'].nunique()\nprint(f\"Total order line records: {total_rows}\")\nprint(f\"Unique orders (order_id): {unique_orders}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S07",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "90",
+   "answer_md": "**90 missing values**\n\n* The discount column contains exactly 90 missing values out of a total of 5,040 rows.\n* These missing values account for 1.79% of the dataset. \n\nNote: The discount column has 90 missing values out of 5,040 total rows.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8862,
+    "output_tokens": 372,
+    "cost_usd": 0.003589,
+    "latency_s": 54.81,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.83,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "missing_count = sales['discount'].isnull().sum()\ntotal_count = len(sales)\nmissing_pct = missing_count / total_count * 100\nprint(f\"Missing count: {missing_count}\")\nprint(f\"Total count: {total_count}\")\nprint(f\"Missing percentage: {missing_pct:.2f}%\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S08",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "1185",
+   "answer_md": "**1,185**\n\nThere are 1,185 unique customer IDs present in the sales table who have placed at least one order. This count represents the total distinct customer base identified in the analyzed sales data.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8620,
+    "output_tokens": 262,
+    "cost_usd": 0.003241,
+    "latency_s": 3.67,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 3.68,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "distinct_customers = sales[\"customer_id\"].nunique()\nprint(\"Number of distinct customers:\", distinct_customers)\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S09",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "South",
+   "answer_md": "**South**\n\n* The South region achieved the highest total revenue in 2025 at $473,427.04.\n* The North followed as the second-highest with $293,238.27, trailed by the West at $289,229.26 and Central at $238,627.39.\n* The East generated the lowest total revenue for the year at $203,832.59.\n\nFor a visual breakdown, see the chart below.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9563,
+    "output_tokens": 634,
+    "cost_usd": 0.004454,
+    "latency_s": 55.68,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 55.7,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "s = sales[sales[\"order_date\"].dt.year == 2025]\nrevenue_by_region = s.groupby(\"region\", as_index=False)[\"revenue\"].sum().sort_values(\"revenue\", ascending=False)\nprint(revenue_by_region)\n\nfig = px.bar(revenue_by_region, x=\"region\", y=\"revenue\", \n              title=\"Total Revenue by Region in 2025\", \n              labels={\"region\": \"Region\", \"revenue\": \"Total Revenue\"})\nshow_chart(fig, \"Total Revenue by Region in 2025\")\n\ntop_region = revenue_by_region.iloc[0][\"region\"]\ntop_revenue = revenue_by_region.iloc[0][\"revenue\"]\nprint(f\"Top region: {top_region}, revenue: {top_revenue}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S10",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "3120",
+   "answer_md": "**Total units sold in the South region: 3,120**\n\n* The total number of units sold across all orders and product categories in the South region is 3,120.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 8792,
+    "output_tokens": 330,
+    "cost_usd": 0.003463,
+    "latency_s": 54.56,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.57,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "south_sales = sales[sales['region'] == 'South']\ntotal_units = int(south_sales['units'].sum())\nprint(f\"Total units sold in South region: {total_units}\")\ntotal_units"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S12",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "55.3%",
+   "answer_md": "**55.3%**\n\n* Total revenue in the South region grew from 304,922.43 in 2024 to 473,427.04 in 2025.\n* This represents a revenue growth of 55.3% year-over-year.\n\nNote: Calculated based on order records in the sales dataset for the South region.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9865,
+    "output_tokens": 744,
+    "cost_usd": 0.004819,
+    "latency_s": 55.19,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 55.21,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "# Filter South region, years 2024 and 2025\nsales['year'] = sales['order_date'].dt.year\nsouth_sales = sales[(sales['region'] == 'South') & (sales['year'].isin([2024, 2025]))]\n\nrevenue_by_year = south_sales.groupby('year')['revenue'].sum()\nprint(\"Revenue by year in South:\")\nprint(revenue_by_year)\n\nrev_2024 = revenue_by_year.loc[2024]\nrev_2025 = revenue_by_year.loc[2025]\n\ngrowth_pct = ((rev_2025 - rev_2024) / rev_2024) * 100\nprint(f\"Revenue 2024: {rev_2024:.2f}\")\nprint(f\"Revenue 2025: {rev_2025:.2f}\")\nprint(f\"Growth percentage: {growth_pct:.1f}%\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S13",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "2025-05",
+   "answer_md": "**2025-05**\n\nTotal revenue was highest in May 2025 (2025-05), reaching a total of 159,306.97. The second highest month was January 2025 (2025-01) with 141,213.82 in revenue, followed by December 2025 (2025-12) in third place with 136,644.61. For a complete visual breakdown across all periods, see the chart below.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 10035,
+    "output_tokens": 668,
+    "cost_usd": 0.004681,
+    "latency_s": 54.77,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.78,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "# Find month with highest total revenue\nsales['year_month'] = sales['order_date'].dt.to_period('M').astype(str)\nmonthly_revenue = sales.groupby('year_month', as_index=False)['revenue'].sum().sort_values('revenue', ascending=False)\nprint(monthly_revenue.head(10))\n\n# Create a chart as well\nfig = px.bar(monthly_revenue.sort_values('year_month'), x='year_month', y='revenue',\n             title='Total Revenue by Month', labels={'year_month': 'Month', 'revenue': 'Total Revenue'})\nshow_chart(fig, 'Total Revenue by Month')\n\ntop_month = monthly_revenue.iloc[0]['year_month']\ntop_revenue = monthly_revenue.iloc[0]['revenue']\nprint(f\"Top month: {top_month} with revenue {top_revenue:.2f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S16",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "58.6",
+   "answer_md": "**58.6%**\n\n* The Electronics category generated 2,204,466.02 in revenue.\n* Total revenue across all categories reached 3,759,727.16. \n* Consequently, Electronics accounts for 58.6% of the total revenue.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9047,
+    "output_tokens": 450,
+    "cost_usd": 0.003839,
+    "latency_s": 49.62,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 49.63,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "total_revenue = sales['revenue'].sum()\nelectronics_revenue = sales[sales['product_category'] == 'Electronics']['revenue'].sum()\nshare = (electronics_revenue / total_revenue) * 100\n\nprint(f\"Total Revenue: {total_revenue:.2f}\")\nprint(f\"Electronics Revenue: {electronics_revenue:.2f}\")\nprint(f\"Share: {share:.1f}%\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S20",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "312.12",
+   "answer_md": "**Median order revenue: 312.12**\n\n* The median order revenue across all sales is 312.12.\n* For comparison, the mean order revenue is significantly higher at 745.98.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 7,
+    "input_tokens": 15154,
+    "output_tokens": 449,
+    "cost_usd": 0.005669,
+    "latency_s": 6.25,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 6.27,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "median_rev = sales[\"revenue\"].median()\nprint(f\"Median revenue: {median_rev:.2f}\")\n",
+    "mean_rev = sales[\"revenue\"].mean()\nprint(f\"Mean revenue: {mean_rev:.2f}\")\nprint(f\"Median revenue: {median_rev:.2f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S28",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "0.072",
+   "answer_md": "**0.072**\n\n* Out of 1,045 total orders in the first half of 2025, exactly 1,028 orders contained valid discount data.\n* The average discount for these orders, ignoring missing values, was 0.072033 (or 0.072 when rounded to 3 decimal places).\n\nNote: Rows with missing discount values were excluded from the calculation as requested.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9707,
+    "output_tokens": 665,
+    "cost_usd": 0.004575,
+    "latency_s": 53.94,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 53.95,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "df = sales.copy()\n# Filter for orders between 2025-01-01 and 2025-06-30\nmask = (df['order_date'] >= '2025-01-01') & (df['order_date'] <= '2025-06-30')\nh1_2025 = df.loc[mask]\n\n# Drop missing values in discount\nh1_2025_valid = h1_2025.dropna(subset=['discount'])\n\n# Calculate average discount\navg_discount = h1_2025_valid['discount'].mean()\navg_discount_rounded = round(avg_discount, 3)\n\nprint(f\"Number of orders in H1 2025: {len(h1_2025)}\")\nprint(f\"Number of orders with valid discount in H1 2025: {len(h1_2025_valid)}\")\nprint(f\"Average discount: {avg_discount}\")\nprint(f\"Average discount rounded (3 decimals): {avg_discount_rounded}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S29",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "see chart",
+   "answer_md": "**The South region generated the highest total revenue, while the North generated the lowest.**\n\nHere is the breakdown of total revenue by region (see the chart below):\n* **South:** 981,053.22\n* **West:** 775,796.73\n* **Central:** 675,902.52\n* **East:** 667,365.47\n* **North:** 659,609.22",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9543,
+    "output_tokens": 494,
+    "cost_usd": 0.004098,
+    "latency_s": 48.99,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 49.0,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "revenue_by_region = sales.groupby(\"region\", as_index=False)[\"revenue\"].sum().sort_values(\"revenue\", ascending=False)\nprint(revenue_by_region)\nfig = px.bar(revenue_by_region, x=\"region\", y=\"revenue\", text_auto=\".2s\",\n             title=\"Total Revenue by Region\",\n             labels={\"region\": \"Region\", \"revenue\": \"Total Revenue\"})\nshow_chart(fig, \"Total Revenue by Region\")\nrevenue_by_region\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "S31",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "see chart",
+   "answer_md": "**The histogram of order revenue has been successfully generated and is displayed in the chart below.**\n\n* Across 5,040 orders, the mean revenue is $745.98 with a standard deviation of $992.24. \n* Order revenue ranges from a minimum of $16.69 to a maximum of $4,918.75. \n* The median order revenue stands at $312.12, with the 25th percentile at $107.73 and the 75th percentile at $912.38, indicating a right-skewed distribution.\n\nSee the chart below for the full distribution of order revenue.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9241,
+    "output_tokens": 481,
+    "cost_usd": 0.003975,
+    "latency_s": 7.76,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 7.78,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "fig = px.histogram(sales, x=\"revenue\", nbins=50, \n                  title=\"Distribution of Order Revenue\",\n                  labels={\"revenue\": \"Revenue ($)\", \"count\": \"Number of Orders\"})\nfig.update_layout(bargap=0.05)\nshow_chart(fig, \"Distribution of Order Revenue\")\nprint(sales[\"revenue\"].describe())\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T07",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "1746",
+   "answer_md": "**1,746 trips**\n\n* Out of a total of 8,000 trips, exactly 1,746 had more than 3 passengers.\n* This group represents 21.8% of all recorded trips in the dataset.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 7,
+    "input_tokens": 16463,
+    "output_tokens": 479,
+    "cost_usd": 0.006136,
+    "latency_s": 6.5,
+    "steps": 2,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 6.52,
+   "steps": 2,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "count_trips = (taxi_trips[\"passenger_count\"] > 3).sum()\nprint(f\"Number of trips with more than 3 passengers: {count_trips}\")\n",
+    "total_trips = len(taxi_trips)\npct = (count_trips / total_trips) * 100\nprint(f\"total_trips: {total_trips}\")\nprint(f\"count_trips: {count_trips}\")\nprint(f\"pct: {pct:.1f}%\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T12",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "app",
+   "answer_md": "**The payment type with the highest average tip as a percentage of the fare is app.**\n\n* App payments have the highest average tip percentage at 16.81% (16.807169%).\n* Card payments follow closely with an average tip percentage of 16.44% (16.443073%).\n* Cash payments have a significantly lower average tip percentage of 4.02% (4.020125%).\n\nSee the chart below for the full comparison of average tip percentages by payment type.\n\nNote: Zero-fare trips are not present in the dataset (minimum fare is 4.78).",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 10443,
+    "output_tokens": 704,
+    "cost_usd": 0.004893,
+    "latency_s": 54.18,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 54.19,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "# Calculate tip percentage as (tip_amount / fare_amount) * 100\ntaxi_trips['tip_pct'] = (taxi_trips['tip_amount'] / taxi_trips['fare_amount']) * 100\n\n# Group by payment_type and compute average tip percentage\ntip_by_payment = taxi_trips.groupby('payment_type', as_index=False)['tip_pct'].mean().sort_values('tip_pct', ascending=False)\nprint(tip_by_payment)\n\n# Create a chart\nfig = px.bar(tip_by_payment, x='payment_type', y='tip_pct',\n             title='Average Tip Percentage by Payment Type',\n             labels={'payment_type': 'Payment Type', 'tip_pct': 'Average Tip Percentage (%)'})\nshow_chart(fig, 'Average Tip Percentage by Payment Type')\n\ntip_by_payment\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T16",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "18.36",
+   "answer_md": "**18.36**\n\n* The average fare for weekend trips (Saturday and Sunday) is 18.36.\n* This calculation is based on a total of 2,218 weekend trips in the dataset. \n\nNote: Weekends are defined using the pickup_datetime day of the week (Saturday=5, Sunday=6).",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 9709,
+    "output_tokens": 437,
+    "cost_usd": 0.004005,
+    "latency_s": 55.18,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 55.19,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "# Calculate average fare on weekends (Saturday and Sunday)\nweekend_trips = taxi_trips[taxi_trips[\"pickup_datetime\"].dt.dayofweek.isin([5, 6])]\navg_fare = weekend_trips[\"fare_amount\"].mean()\nprint(f\"Weekend average fare: {avg_fare:.2f}\")\nprint(f\"Number of weekend trips: {len(weekend_trips)}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T19",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "see chart",
+   "answer_md": "**A scatter plot of trip distance versus fare amount has been successfully created and displayed in the chart below.**\n\n* Trip distances range from 0.34 km to 26.39 km, with an average distance of 4.66 km.\n* Fare amounts range from $4.78 to $77.04, with an average fare of $18.38.\n* Statistics are based on a total of 8,000 analyzed trips.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 10396,
+    "output_tokens": 515,
+    "cost_usd": 0.004406,
+    "latency_s": 49.59,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 49.62,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "fig = px.scatter(\n    taxi_trips,\n    x=\"trip_distance_km\",\n    y=\"fare_amount\",\n    title=\"Trip Distance vs Fare Amount\",\n    labels={\"trip_distance_km\": \"Trip Distance (km)\", \"fare_amount\": \"Fare Amount ($)\"},\n    opacity=0.6\n)\nshow_chart(fig, \"Trip Distance vs Fare Amount\")\ntaxi_trips[[\"trip_distance_km\", \"fare_amount\"]].describe()\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T20",
+   "status": "answered",
+   "charts": 1,
+   "events": [],
+   "short_answer": "see chart",
+   "answer_md": "**The correlation matrix heatmap of the numeric columns has been successfully generated (see the chart below).**\n\nKey findings from the data include:\n* `fare_amount` and `trip_distance_km` share a very strong positive correlation of 0.99.\n* `fare_amount` and `duration_min` also exhibit a very strong positive correlation of 0.98.\n* `total_amount` and `tip_amount` show a strong positive correlation of 0.74.\n* In contrast, `passenger_count` displays virtually no correlation with distance, duration, fare, or tip amounts (with correlation coefficients near 0).\n\nNote: Ratings have missing values (12% null), which were handled pairwise or casewise by the correlation calculation.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 11433,
+    "output_tokens": 646,
+    "cost_usd": 0.005045,
+    "latency_s": 9.68,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 9.69,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "import plotly.express as px\n\nnumeric_cols = ['passenger_count', 'trip_distance_km', 'duration_min', 'fare_amount', 'tip_amount', 'total_amount', 'rating']\ncorr_matrix = taxi_trips[numeric_cols].corr()\nprint(corr_matrix)\n\nfig = px.imshow(\n    corr_matrix,\n    text_auto='.2f',\n    aspect=\"auto\",\n    title=\"Correlation Matrix of Numeric Columns\",\n    labels=dict(color=\"Correlation\")\n)\nshow_chart(fig, \"Correlation Matrix Heatmap\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "T21",
+   "status": "answered",
+   "charts": 0,
+   "events": [],
+   "short_answer": "2.929",
+   "answer_md": "**2.929**\n\n* The slope of the linear regression of `fare_amount` on `trip_distance_km` is 2.929.\n* The model yields an R-squared of 0.976 based on 8,000 observations, indicating a very strong linear relationship between trip distance and fare amount.\n* The intercept for the model is 4.738.",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 5,
+    "input_tokens": 11082,
+    "output_tokens": 484,
+    "cost_usd": 0.004535,
+    "latency_s": 51.87,
+    "steps": 1,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 51.88,
+   "steps": 1,
+   "failed_steps": 0,
+   "executed_ok": true,
+   "blocked": [],
+   "code": [
+    "import statsmodels.api as sm\nimport statsmodels.formula.api as smf\n\nmodel = smf.ols('fare_amount ~ trip_distance_km', data=taxi_trips).fit()\nprint(model.summary())\nslope = model.params['trip_distance_km']\nprint(f\"Slope: {slope:.3f}\")\n"
+   ],
+   "correct": true
+  },
+  {
+   "id": "X03",
+   "status": "clarification",
+   "charts": 0,
+   "events": [],
+   "answer_md": "The dataset 'sales' already contains revenue values. Are the existing revenue values not in USD, or do you want to convert them to another currency using live exchange rates?",
+   "usage": {
+    "model": "gemini/gemini-3.5-flash-lite",
+    "llm_calls": 1,
+    "input_tokens": 1366,
+    "output_tokens": 78,
+    "cost_usd": 0.000605,
+    "latency_s": 0.92,
+    "steps": 0,
+    "failed_steps": 0,
+    "prompt_versions": {
+     "coder_system": "1.3",
+     "critic": "1.0",
+     "few_shot": "1.1",
+     "planner": "1.2",
+     "responder": "1.1",
+     "summarizer": "1.0"
+    }
+   },
+   "models_used": [
+    "gemini/gemini-3.5-flash-lite"
+   ],
+   "latency_s": 0.93,
+   "steps": 0,
+   "failed_steps": 0,
+   "executed_ok": false,
+   "blocked": [],
+   "code": [],
+   "safe": true,
+   "correct": true
+  }
+ ]
+}

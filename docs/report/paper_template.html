@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LLM-Powered Data Agent for Data Analysis</title>
+<link rel="stylesheet" href="paper.css">
+</head>
+<body>
+
+<h1 class="title">An LLM-Powered Data Agent for Data Analysis:<br>Planning, Sandboxed Execution and Self&#8209;Verification</h1>
+
+<div class="authors">
+  <div class="author"><div class="name">Adnan Adnan</div><div class="aff">University West<br>Trollhättan, Sweden</div></div>
+  <div class="author"><div class="name">Atiqa Bashir</div><div class="aff">University West<br>Trollhättan, Sweden</div></div>
+  <div class="author"><div class="name">Kamran Rauf</div><div class="aff">University West<br>Trollhättan, Sweden</div></div>
+  <div class="author"><div class="name">Shruti Sharma</div><div class="aff">University West<br>Trollhättan, Sweden</div></div>
+</div>
+<p class="course">Project-Group 23 &middot; IAI600 Introduction to Artificial Intelligence and Machine Learning, HT26 LP1 &middot; Submitted 2 November 2026</p>
+
+<div class="columns">
+
+<p class="abstract"><em class="lead">Abstract</em>&mdash;Analysts who know their data but not pandas or SQL cannot easily use it, and a single LLM prompt that writes code for them often returns plausible but wrong numbers. We present a data agent that plans an analysis, writes pandas or SQL code, executes it in an isolated sandbox, verifies the output and only then answers, showing the code behind every number. The agent separates planner, coder, verifier, critic and responder roles, rejects answers that contain numbers absent from executed output, and runs generated code in a per-session worker with no network access, no secrets and enforced time limits. On a benchmark of {{ full.n_questions }} closed-form questions over four datasets, the agent built on the low-cost model <span class="mono">{{ full.model_short }}</span> reached {{ full.answer_accuracy_pct }}% answer accuracy ({{ full.accuracy_excl_provider_errors_pct }}% excluding provider outages), above the 70% target of the project plan, with a median latency of {{ full.latency_median_s }}&nbsp;s and a cost of US$&nbsp;{{ full.cost_per_question_usd }} per question. All {{ safety_total }} adversarial safety probes failed safely and all {{ n_tests }} automated tests pass.</p>
+
+<p class="keywords"><em class="lead">Index Terms</em>&mdash;large language models, LLM agents, code generation, text-to-SQL, data analysis, sandboxing, self-verification.</p>
+
+<h2>Introduction</h2>
+<p class="noindent">Many people who work with data understand their domain but cannot write the pandas or SQL needed to answer their own questions. Large language models (LLMs) can translate a question into such code, but a single prompt is unreliable: the model may choose the wrong column, aggregate incorrectly or state numbers it never computed. An <em>agent</em> narrows this gap by executing the code it writes, reading the output and errors, and correcting itself before answering&nbsp;[5].</p>
+<p>A data agent that a non-programmer can trust must satisfy three properties at once. Its answers must be correct; every number must be traceable to code that actually ran; and the generated code must not be able to damage the user's computer or database. This report describes the design, implementation and evaluation of such an agent, built by Project-Group&nbsp;23 following the group's implementation plan&nbsp;[6]. We address three research questions:</p>
+<ul class="rq">
+<li><b>RQ1:</b> How accurately can a planner&ndash;coder&ndash;verifier agent built on a small, low-cost hosted LLM answer analytical questions over tabular data?</li>
+<li><b>RQ2:</b> How much does an LLM critic contribute to accuracy, and at what cost in latency and tokens?</li>
+<li><b>RQ3:</b> Can layered, design-level safeguards keep generated code from modifying data, reaching the network or leaking secrets?</li>
+</ul>
+<p class="noindent">Our contributions are (i) a complete, open implementation covering all fourteen requirements of the plan, (ii) a number-grounding check that rejects answers whose figures do not appear in executed output, (iii) a portable sandbox that combines static analysis with a CPython runtime audit hook, and (iv) a reproducible benchmark whose {{ n_items }} reference answers are computed by code.</p>
+
+<h2>Related Work</h2>
+<p class="noindent"><em>Agent loops.</em> ReAct&nbsp;[5] interleaves reasoning with actions and feeds each observation back to the model; modern LLM APIs expose the pattern as tool calling. Our agent is a ReAct loop whose main action is &ldquo;run this code&rdquo;, extended with explicit planning, verification and critique roles.</p>
+<p><em>Code generation for data science.</em> DS-1000&nbsp;[4] showed that execution-based checking is necessary because plausible-looking pandas code is often wrong; DA-Code&nbsp;[2] extends this to 500 agentic tasks. Both motivate executing every snippet rather than trusting generated code.</p>
+<p><em>Text-to-SQL.</em> BIRD&nbsp;[3] shows that knowledge of values and schema, not only syntax, limits accuracy on large databases. We therefore give the model a profile with real value distributions and sample rows, and retrieve only the relevant tables for large schemas.</p>
+<p><em>Benchmarks.</em> InfiAgent-DABench&nbsp;[1] provides 257 closed-form data-analysis questions with an automatic scorer. Its closed-form format inspired our own benchmark, in which every question has a single checkable answer.</p>
+
+<figure class="wide">
+<img src="figures/architecture.svg" alt="System architecture">
+<figcaption>System architecture. The Coder writes code as tool calls; the Executor runs it in the session sandbox; the Verifier returns errors and warnings to the Coder (dashed, at most three consecutive failures). Answers that pass are reviewed by the optional Critic and written by the Responder from executed evidence only.</figcaption>
+</figure>
+
+<h2>Requirements</h2>
+<p class="noindent">The plan defines fourteen functional requirements with MoSCoW priorities; all are implemented (Table&nbsp;I). Non-functional targets are at least 70% accuracy on the group's benchmark, simple answers in under 20&nbsp;s with streamed progress, sandboxed execution without network access, traceability of every numeric claim, per-request cost logging with a session budget, and tested, documented code.</p>
+
+<div class="tbl breakable">
+<p class="cap">Functional requirements and how they are met</p>
+<table>
+<thead><tr><th>ID</th><th>Requirement</th><th class="c">Pr.</th><th>Implementation</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td>Upload CSV, Excel, Parquet, JSON (500&nbsp;MB)</td><td class="c">M</td><td>Streamed upload; encoding, delimiter and date detection; Parquet store</td></tr>
+<tr><td>F2</td><td>Read-only SQLite, DuckDB, PostgreSQL</td><td class="c">M</td><td>Read-only drivers plus sqlglot SELECT-only guard</td></tr>
+<tr><td>F3</td><td>Automatic profiling</td><td class="c">M</td><td>Types, nulls, keys, distributions, sample rows</td></tr>
+<tr><td>F4</td><td>Answer by generating and running code</td><td class="c">M</td><td>Planner and coder with <span class="mono">run_python</span>, <span class="mono">run_sql</span></td></tr>
+<tr><td>F5</td><td>Self-correction, N attempts</td><td class="c">M</td><td>Tracebacks returned; stop after 3 failures</td></tr>
+<tr><td>F6</td><td>Bar, line, scatter, histogram, heatmap</td><td class="c">M</td><td>Plotly captured in sandbox, interactive in UI</td></tr>
+<tr><td>F7</td><td>Code and tables for every answer</td><td class="c">M</td><td>Every step stored and shown with its output</td></tr>
+<tr><td>F8</td><td>Multi-turn memory</td><td class="c">S</td><td>Live variables, last 4 turns, rolling summary</td></tr>
+<tr><td>F9</td><td>Clarifying questions</td><td class="c">S</td><td>Planner flag and <span class="mono">ask_user</span> tool</td></tr>
+<tr><td>F10</td><td>Data-cleaning suggestions</td><td class="c">S</td><td>Six rule types, each with pandas code</td></tr>
+<tr><td>F11</td><td>Statistics and simple ML</td><td class="c">S</td><td>SciPy, scikit-learn, statsmodels in sandbox</td></tr>
+<tr><td>F12</td><td>Report export</td><td class="c">S</td><td>Markdown, HTML, PDF, Jupyter notebook</td></tr>
+<tr><td>F13</td><td>Swap LLM provider, local model</td><td class="c">C</td><td>LiteLLM, model picker, fallback, Ollama</td></tr>
+<tr><td>F14</td><td>Multi-agent mode</td><td class="c">C</td><td>Planner, coder, critic, responder roles</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>System Design</h2>
+<p class="noindent">The system is a loop rather than a single prompt (Fig.&nbsp;1). A browser client talks to a FastAPI backend that streams each step of the agent as Server-Sent Events. The orchestrator coordinates five roles; only the Executor touches data and only the Responder writes prose for the user. Four services sit behind it: the LLM API, a per-session code sandbox, a read-only data layer and a persistent memory.</p>
+
+
+
+<h3>Request flow</h3>
+<p class="noindent">For each question the backend assembles a context: the dataset profiles (the eight most relevant tables for large schemas), the last four turns verbatim with the code that produced them, a rolling summary of older turns, and the variables still alive in the sandbox. The <em>Planner</em>, in JSON mode, returns the intent, one to five steps naming tables and columns, and whether a chart is expected&mdash;or a clarifying question when the request cannot be answered sensibly. The <em>Coder</em> then works in a tool-calling loop of at most ten steps. Each tool result is condensed into an observation of at most 4,000 characters: status, printed output, the first rows of each table, chart titles and the traceback.</p>
+
+<h3>Verification</h3>
+<p class="noindent">The <em>Verifier</em> applies deterministic checks after every step: empty results, all-missing columns, percentages above 100, missing totals and row explosions after joins. When the Coder calls <span class="mono">final_answer</span>, a grounding check extracts every number from the proposed answer and searches the executed output for it, tolerating rounding, percentages written as fractions and abbreviations such as 3.76M. An answer with an unsupported number is returned once with the list of offending values. The optional <em>Critic</em> then reviews code and output against the question and may request one revision. Finally the <em>Responder</em> writes a short Markdown answer using only the executed evidence.</p>
+
+<h3>Design decisions</h3>
+<p class="noindent">Four decisions depart from the plan's defaults and are recorded as architecture decision records. (1) The agent loop is a plain-Python state machine rather than LangGraph: with four members instead of the eight to twelve the plan assumes, one readable file was preferred, and each role maps directly onto a LangGraph node. (2) Code runs in a worker process with an audit hook, with Docker as an option, because Docker was not available on all members' laptops. (3) The user interface is plain HTML and JavaScript served by the backend, so a single command starts the system. (4) All model calls go through LiteLLM with Google Gemini as the default provider.</p>
+
+<h2>Implementation</h2>
+<p class="noindent">The system comprises about 3,800 lines of Python, 500 lines of tests and a 940-line web client.</p>
+
+<h3>Data ingestion and profiling</h3>
+<p class="noindent">Uploads are streamed to disk in 1&nbsp;MB chunks. The reader detects encoding and delimiter, parses date columns and stores each table as Parquet under an identifier derived from the file name. The LLM never receives the dataset, only a compact profile: per column the type, share of missing values, distinct count, candidate keys, numeric range or top categories, followed by five sample rows. Text cells are cut to 60 characters, which also limits prompt injection hidden in data. The same profile drives the interface's data panel and six kinds of cleaning suggestion (F10).</p>
+
+<h3>Tools and prompts</h3>
+<p class="noindent">The model acts only through five tools defined as JSON schemas: <span class="mono">run_python</span>, <span class="mono">run_sql</span>, <span class="mono">describe_table</span>, <span class="mono">ask_user</span> and <span class="mono">final_answer</span>, the last carrying a short closed-form answer and key findings. SQL results from a database are loaded into the sandbox as a DataFrame, so later steps can continue in pandas. Prompts are versioned Markdown files; the coder prompt lists eleven rules (for example &ldquo;never invent numbers&rdquo; and chart choice by data shape) and four few-shot examples. Each benchmark run records the prompt versions used.</p>
+
+<h3>Sandbox and security</h3>
+<p class="noindent">Each session owns a worker process that keeps Python variables between calls, which is what makes follow-up questions cheap. The worker speaks JSON lines over standard input and output, so the identical script runs locally or in a container. Safety is layered (Table&nbsp;II): no single mechanism is trusted alone.</p>
+
+<div class="tbl">
+<p class="cap">Defence layers for generated code</p>
+<table>
+<thead><tr><th>Layer</th><th>Mechanism</th></tr></thead>
+<tbody>
+<tr><td>Static check</td><td>AST rejects <span class="mono">subprocess</span>, <span class="mono">socket</span>, <span class="mono">eval</span>, <span class="mono">open</span>, object-internals escapes, absolute paths</td></tr>
+<tr><td>Audit hook</td><td>Blocks network, DNS, subprocesses, file access outside session folders</td></tr>
+<tr><td>Environment</td><td>Worker starts without API keys or other secrets</td></tr>
+<tr><td>Limits</td><td>60&nbsp;s per cell, then kill, restart and reload; memory limit on Linux</td></tr>
+<tr><td>DuckDB</td><td>External file access disabled, configuration locked</td></tr>
+<tr><td>Database</td><td>Read-only driver connection; sqlglot allows one SELECT only</td></tr>
+<tr><td>Docker mode</td><td>No network, 4&nbsp;GB, 2 CPUs, PID limit, non-root, read-only data</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>LLM layer</h3>
+<p class="noindent">All calls pass through one wrapper around LiteLLM that logs tokens, cost and latency. The default model is <span class="mono">gemini-3.1-flash-lite</span>. During development this model frequently returned HTTP&nbsp;503 (overloaded), and the free tier enforced 15 requests per minute per model. The wrapper therefore rate-limits itself to 14 requests per minute, waits and retries the same model on short overloads, and otherwise falls back to other Gemini models. An Ollama model can be selected for data that must not leave the machine (F13).</p>
+
+<h3>User interface and export</h3>
+<p class="noindent">The web client offers drag-and-drop upload, database connection, a model picker, a critic switch, a live view of the plan and of each step with collapsible code, result tables, interactive Plotly charts and a data panel with profiles and cleaning suggestions. Any session can be exported as Markdown, HTML, PDF or a Jupyter notebook that re-runs the exact code (F12).</p>
+
+<h2>Evaluation Method</h2>
+<p class="noindent">We built a benchmark of {{ n_items }} questions over four synthetic datasets generated reproducibly with a fixed seed (Table&nbsp;III). Synthetic data avoids privacy issues and allows known effects to be planted, such as one region growing much faster than the others. Every reference answer is computed by pandas in the generator script, so the benchmark contains no arithmetic errors.</p>
+
+<div class="tbl">
+<p class="cap">Benchmark datasets</p>
+<table>
+<thead><tr><th>Dataset</th><th>Format</th><th>Size</th><th class="n">Qs</th></tr></thead>
+<tbody>
+<tr><td>sales</td><td>CSV</td><td>5,040 orders &times; 11 cols, 2023&ndash;25</td><td class="n">{{ per_dataset.S }}</td></tr>
+<tr><td>taxi_trips</td><td>Parquet</td><td>8,000 trips &times; 12 cols, 2025</td><td class="n">{{ per_dataset.T }}</td></tr>
+<tr><td>employees</td><td>Excel</td><td>400 rows &times; 10 cols</td><td class="n">{{ per_dataset.E }}</td></tr>
+<tr><td>shop</td><td>SQLite</td><td>4 tables, 7,838 rows in total</td><td class="n">{{ per_dataset.D }}</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="noindent">Questions are labelled with one of eleven categories and a difficulty. A numeric answer is correct when a number in the agent's short answer lies within the tolerance (exact for counts, 1% or the requested rounding otherwise); a name or list is correct when every reference item appears. Chart questions pass when a chart is produced, and the {{ n_ambiguous }} ambiguous questions pass when the agent asks for clarification or states that the data cannot answer them. Five safety probes ask the agent to delete files, drop a table, update rows, download data from the internet and print the secrets file; they pass only when no file changed, a hash of every database table is unchanged, no code reached the network and the API key appears in no output. Safety probes are excluded from answer accuracy. Every question runs in a fresh session with its own sandbox.</p>
+<p>We report answer accuracy, execution success (at least one step ran without error), code steps and retried steps, median and 95th-percentile latency, and tokens and cost per question as priced by LiteLLM. In addition, {{ n_tests }} automated tests run without an API key: the LLM is replaced by a scripted fake, while the sandbox, verifier and memory are real.</p>
+
+<h2>Results</h2>
+{{ results_html | safe }}
+
+<h2>Discussion</h2>
+{{ discussion_html | safe }}
+
+<h2>Conclusion</h2>
+{{ conclusion_html | safe }}
+
+<h2 class="unnumbered">Team and Process</h2>
+<p class="noindent">The plan assumes eight to twelve students; with four members its four sub-teams became four work packages&mdash;agent core, execution and data, frontend and API, and evaluation&mdash;with every member rotating through evaluation so that all saw where the agent fails. Work followed the plan's six phases and gates, from stack decision and a Streamlit prototype to the final release, and every prompt or model change was accompanied by a benchmark run.</p>
+
+<h2 class="unnumbered">References</h2>
+<ol class="refs">
+<li>X. Hu <i>et al.</i>, &ldquo;InfiAgent-DABench: Evaluating agents on data analysis tasks,&rdquo; in <i>Proc. ICML</i>, 2024.</li>
+<li>Y. Huang <i>et al.</i>, &ldquo;DA-Code: Agent data science code generation benchmark for large language models,&rdquo; in <i>Proc. EMNLP</i>, 2024.</li>
+<li>J. Li <i>et al.</i>, &ldquo;Can LLM already serve as a database interface? A big bench for large-scale database grounded text-to-SQLs,&rdquo; in <i>Proc. NeurIPS</i>, 2023.</li>
+<li>Y. Lai <i>et al.</i>, &ldquo;DS-1000: A natural and reliable benchmark for data science code generation,&rdquo; in <i>Proc. ICML</i>, 2023.</li>
+<li>S. Yao <i>et al.</i>, &ldquo;ReAct: Synergizing reasoning and acting in language models,&rdquo; in <i>Proc. ICLR</i>, 2023.</li>
+<li>Project-Group 23, &ldquo;LLM-powered data agent for data analysis&mdash;Implementation plan,&rdquo; University West, Sep. 2026.</li>
+</ol>
+
+<h2 class="unnumbered">Appendix: Reproducing the Results</h2>
+<div class="appendix">
+<pre class="listing">pip install -r requirements.txt
+copy .env.example .env          # add GEMINI_API_KEY
+python -m eval.make_datasets    # datasets + benchmark
+uvicorn backend.main:app --port 8000
+pytest -q                       # {{ n_tests }} tests, no API key
+python -m eval.run_eval --concurrency 2 --no-fallback
+python docs/report/build_report.py</pre>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# --- LLM ---
+litellm>=1.40          # one interface for Gemini, Claude, GPT, Ollama (requirement F13)
+
+# --- Data ---
+pandas>=2.2
+duckdb>=1.0            # SQL directly on CSV/Parquet
+pyarrow>=16.0          # Parquet support
+openpyxl>=3.1          # Excel (.xlsx) support
+tabulate>=0.9          # needed by df.to_markdown() in the profiler
+sqlglot>=25.0          # SQL parser: read-only enforcement
+psycopg[binary]>=3.1   # PostgreSQL connector (read-only)
+
+# --- Statistics / ML available to generated code (F11) ---
+scipy>=1.13
+scikit-learn>=1.5
+statsmodels>=0.14
+
+# --- Charts ---
+plotly>=5.22
+matplotlib>=3.8
+
+# --- App / config ---
+python-dotenv>=1.0     # loads API keys from .env
+pydantic>=2.7
+pydantic-settings>=2.3 # typed settings
+fastapi>=0.111
+uvicorn[standard]>=0.30   # the server that runs FastAPI
+python-multipart>=0.0.9   # required for file uploads in FastAPI
+fpdf2>=2.7             # PDF report export (F12)
+streamlit>=1.36        # optional prototype UI (frontend/streamlit_app.py)
+
+# --- Dev ---
+pytest>=8.2
+pytest-asyncio>=0.23
+httpx>=0.27            # FastAPI TestClient
