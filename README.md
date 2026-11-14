@@ -7,10 +7,7 @@ Upload a dataset or connect a database, ask a question in plain language, and th
 result, and answers with numbers, charts and the code that produced them.
 
 ```
- Web UI ──► FastAPI (SSE) ──► Orchestrator: Planner → Coder ⇄ Executor → Verifier → Critic → Responder
-                                   │             │            │
-                              Gemini (LiteLLM)  Sandbox    DuckDB / SQLite / PostgreSQL (read-only)
-```
+ 
 
 ## Quick start (Windows, local)
 
